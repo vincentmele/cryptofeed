@@ -65,7 +65,7 @@ class Huobi(Feed):
             await self.callback(TRADES,
                                 feed=self.id,
                                 pair=pair_exchange_to_std(msg['ch'].split('.')[1]),
-                                order_id=str(trade['id']),
+                                order_id=trade['id'],
                                 side=BUY if trade['direction'] == 'buy' else SELL,
                                 amount=Decimal(trade['amount']),
                                 price=Decimal(trade['price']),
