@@ -214,17 +214,18 @@ class Deribit(Feed):
         msg_dict = json.loads(msg, parse_float=Decimal)
 
         if 'params' in msg_dict.keys():
-            if 'prev_change_id' in msg_dict['params']['data'].keys():
-                expected_prev_id = msg_dict['params']['data']['prev_change_id']
-                change_id = msg_dict['params']['data']['change_id']
-                channel = msg_dict['params']['channel']
+            if isinstance(msg_dict['params']['data'], dict):
+                if 'prev_change_id' in msg_dict['params']['data'].keys():
+                    expected_prev_id = msg_dict['params']['data']['prev_change_id']
+                    change_id = msg_dict['params']['data']['change_id']
+                    channel = msg_dict['params']['channel']
 
-                if 'last_change_id' in self.channel_map[channel]:
-                    if expected_prev_id != self.channel_map[channel]['last_change_id']:
-                        LOG.warning("%s: missing sequence number. Received %d, last was %d, expected %d", self.id, change_id,
-                                    self.channel_map[channel]['last_change_id'], expected_prev_id)
-                        raise MissingSequenceNumber
-                self.channel_map[channel]['last_change_id'] = change_id
+                    if 'last_change_id' in self.channel_map[channel]:
+                        if expected_prev_id != self.channel_map[channel]['last_change_id']:
+                            LOG.warning("%s: missing sequence number. Received %d, last was %d, expected %d", self.id, change_id,
+                                        self.channel_map[channel]['last_change_id'], expected_prev_id)
+                            raise MissingSequenceNumber
+                    self.channel_map[channel]['last_change_id'] = change_id
 
         # As a first update after subscription, Deribit sends a notification with no data
         if "testnet" in msg_dict.keys():
