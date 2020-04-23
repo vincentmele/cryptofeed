@@ -58,7 +58,7 @@ setup(
         'yapic.json'
     ],
     extras_require={
-        'redis': ['aioredis'],
+        'redis': ['aioredis>=1.3.1'],
         'arctic': ['arctic'],
         'zmq': ['pyzmq'],
         'mongo': ['motor'],
