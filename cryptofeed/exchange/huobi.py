@@ -65,7 +65,7 @@ class Huobi(Feed):
             await self.callback(TRADES,
                                 feed=self.id,
                                 pair=pair_exchange_to_std(msg['ch'].split('.')[1]),
-                                order_id=trade['id'],
+                                order_id=str(trade['id']),
                                 side=BUY if trade['direction'] == 'buy' else SELL,
                                 amount=Decimal(trade['amount']),
                                 price=Decimal(trade['price']),
@@ -74,7 +74,7 @@ class Huobi(Feed):
 
     async def message_handler(self, msg: str, timestamp: float):
         # unzip message
-        msg = zlib.decompress(msg, 16 + zlib.MAX_WBITS).decode(encoding='utf-8', errors='strict')
+        msg = zlib.decompress(msg, 16 + zlib.MAX_WBITS)
         msg = json.loads(msg, parse_float=Decimal)
 
         # Huobi sends a ping evert 5 seconds and will disconnect us if we do not respond to it
