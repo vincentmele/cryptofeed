@@ -8,6 +8,7 @@ from yapic import json
 import asyncio
 
 import aio_pika
+import zstandard as zstd
 
 from cryptofeed.backends.backend import BackendBookCallback, BackendBookDeltaCallback, BackendFundingCallback, BackendTickerCallback, BackendTradeCallback, BackendOpenInterestCallback
 
@@ -17,6 +18,7 @@ class RabbitCallback:
         self.conn = None
         self.host = host
         self.numeric_type = numeric_type
+        self.cctx = zstd.ZstdCompressor()
 
     async def connect(self):
         if not self.conn:
@@ -26,11 +28,13 @@ class RabbitCallback:
 
     async def write(self, feed: str, pair: str, timestamp: float, receipt_timestamp: float, data: dict):
         await self.connect()
+        data['receipt_timestamp'] = receipt_timestamp
+        data['timestamp'] = timestamp
         data['feed'] = feed
         data['pair'] = pair
         await self.conn.default_exchange.publish(
             aio_pika.Message(
-                body=json.dumps(data).encode()
+                body=self.cctx.compress(bytes(json.dumps(data), 'utf-8'))
             ),
             routing_key='cryptofeed'
         )
