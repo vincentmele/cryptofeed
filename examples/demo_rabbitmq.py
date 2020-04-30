@@ -1,9 +1,9 @@
 from multiprocessing import Process
 
 from cryptofeed import FeedHandler
-from cryptofeed.backends.rabbitmq import BookRabbit
-from cryptofeed.exchanges import Kraken
-from cryptofeed.defines import L2_BOOK
+from cryptofeed.backends.rabbitmq import BookRabbit, TickerRabbit, TradeRabbit
+from cryptofeed.exchanges import Kraken, Deribit, Huobi, OKEx, Bitfinex, HitBTC, DSX
+from cryptofeed.defines import L2_BOOK, TRADES, TICKER
 
 
 def callback(ch, method, properties, body):
@@ -16,11 +16,10 @@ def receiver(port):
         pika.ConnectionParameters(host='localhost', port=port))
     channel = connection.channel()
     channel.queue_declare(queue='cryptofeed')
-    channel.basic_consume(queue='cryptofeed',
-                          on_message_callback=callback, auto_ack=True)
+#    channel.basic_consume(queue='cryptofeed',
+#                          on_message_callback=callback, auto_ack=True)
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
-
 
 def main():
     try:
@@ -29,7 +28,14 @@ def main():
         p.start()
 
         f = FeedHandler()
-        f.add_feed(Kraken(max_depth=2, channels=[L2_BOOK], pairs=['BTC-USD', 'ETH-USD'], callbacks={L2_BOOK: BookRabbit()}))
+        f.add_feed(Kraken(max_depth=50, channels=[L2_BOOK, TRADES, TICKER], pairs=['BTC-USD', 'ETH-USD'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+        f.add_feed(Deribit(max_depth=50, channels=[L2_BOOK, TRADES, TICKER], pairs=['BTC-PERPETUAL', 'ETH-PERPETUAL'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+        f.add_feed(Huobi(max_depth=50, channels=[L2_BOOK, TRADES], pairs=['BTC-USDT', 'ETH-USDT'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+        f.add_feed(OKEx(max_depth=50, channels=[L2_BOOK, TRADES], pairs=['BTC-USDT', 'ETH-USDT'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+        f.add_feed(Bitfinex(max_depth=50, channels=[L2_BOOK, TRADES], pairs=['BTC-USDT', 'ETH-USDT'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+        f.add_feed(HitBTC(max_depth=50, channels=[L2_BOOK, TRADES], pairs=['BTC-USD', 'ETH-USD'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+        f.add_feed(DSX(max_depth=50, channels=[L2_BOOK, TRADES], pairs=['BTC-USDT', 'ETH-USDT'], callbacks={L2_BOOK: BookRabbit(), TRADES: TradeRabbit(), TICKER: TickerRabbit()}))
+
 
         f.run()
 
